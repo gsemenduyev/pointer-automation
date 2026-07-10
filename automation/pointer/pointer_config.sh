@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Pointer Automation settings.
+TOTAL_TIME_MINUTES=0.25
+INTERVAL_SECONDS=2
+MOUSE_MOVE_MODE=small
+MOVE_DISTANCE_PIXELS=120
