@@ -73,6 +73,7 @@ fi
 TOTAL_STEPS=$(((TOTAL_TIME_SECONDS + INTERVAL_SECONDS - 1) / INTERVAL_SECONDS))
 elapsed=0
 step=0
+small_direction="right"
 
 while [ "$elapsed" -lt "$TOTAL_TIME_SECONDS" ]; do
   remaining=$((TOTAL_TIME_SECONDS - elapsed))
@@ -83,13 +84,29 @@ while [ "$elapsed" -lt "$TOTAL_TIME_SECONDS" ]; do
   fi
 
   step=$((step + 1))
-  echo "[${step}/${TOTAL_STEPS}] waiting ${sleep_for}s"
-  sleep "$sleep_for"
-  elapsed=$((elapsed + sleep_for))
+  if [ "$MOUSE_MOVE_MODE" = "small" ]; then
+    echo "[${step}/${TOTAL_STEPS}] moving pointer (small, ${small_direction}), hold ${sleep_for}s"
+    if ! "$MOUSE_MOVER_BIN" "$MOUSE_MOVE_MODE" "$MOVE_DISTANCE_PIXELS" "$sleep_for" "$small_direction" >/dev/null 2>&1; then
+      warn_mouse_backend
+    fi
 
-  echo "[${step}/${TOTAL_STEPS}] moving pointer (${MOUSE_MOVE_MODE})"
-  if ! "$MOUSE_MOVER_BIN" "$MOUSE_MOVE_MODE" "$MOVE_DISTANCE_PIXELS" >/dev/null 2>&1; then
-    warn_mouse_backend
+    if [ "$small_direction" = "right" ]; then
+      small_direction="left"
+    else
+      small_direction="right"
+    fi
+
+    sleep "$sleep_for"
+    elapsed=$((elapsed + sleep_for))
+  else
+    echo "[${step}/${TOTAL_STEPS}] waiting ${sleep_for}s"
+    sleep "$sleep_for"
+    elapsed=$((elapsed + sleep_for))
+
+    echo "[${step}/${TOTAL_STEPS}] moving pointer (${MOUSE_MOVE_MODE})"
+    if ! "$MOUSE_MOVER_BIN" "$MOUSE_MOVE_MODE" "$MOVE_DISTANCE_PIXELS" "$sleep_for" >/dev/null 2>&1; then
+      warn_mouse_backend
+    fi
   fi
 done
 

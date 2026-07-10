@@ -34,9 +34,16 @@ guard let origin = currentMouseLocation() else {
 let modeArg = CommandLine.arguments.dropFirst().first ?? "small"
 let mode = MoveMode(rawValue: modeArg) ?? .small
 let distanceArg = CommandLine.arguments.dropFirst(2).first ?? "120"
+let holdSecondsArg = CommandLine.arguments.dropFirst(3).first ?? "1"
+let directionArg = CommandLine.arguments.dropFirst(4).first ?? "right"
 
 guard let distanceValue = Double(distanceArg), distanceValue > 0 else {
     fputs("MOVE_DISTANCE_PIXELS must be a positive number.\n", stderr)
+    exit(1)
+}
+
+guard let holdSeconds = Double(holdSecondsArg), holdSeconds >= 0 else {
+    fputs("INTERVAL_SECONDS must be a non-negative number.\n", stderr)
     exit(1)
 }
 
@@ -44,17 +51,15 @@ let distance = CGFloat(distanceValue)
 
 switch mode {
 case .small:
-    let p1 = CGPoint(x: origin.x + distance, y: origin.y)
-    let p2 = CGPoint(x: origin.x + distance, y: origin.y + distance)
+    let deltaX = (directionArg == "left") ? -distance : distance
+    let p1 = CGPoint(x: origin.x + deltaX, y: origin.y)
     postMove(to: p1)
     usleep(180_000)
     if let moved = currentMouseLocation(), pointDistance(moved, origin) < 0.5 {
         fputs("Pointer move appears blocked (Accessibility/Input Monitoring not granted).\n", stderr)
         exit(2)
     }
-    postMove(to: p2)
-    usleep(180_000)
-    postMove(to: origin)
+    // In small mode, position is held until the next interval move.
 case .large:
     let pause: useconds_t = 180_000
 
